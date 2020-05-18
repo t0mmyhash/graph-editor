@@ -1,0 +1,40 @@
+QDMNodeContentWidget {
+  background: transparent;
+}
+QDMNodeContentWidget QFrame {
+  background: transparent;
+}
+QDMNodeContentWidget QLabel {
+  color: #ffffff;
+}
+QDMNodeContentWidget QLabel {
+  background: transparent;
+  height: 0px;
+  color: #ffffff;
+  font-size: 72px;
+  max-height: 50px;
+  min-height: 60px;
+  padding-left: 94px;
+}
+QDMNodeContentWidget QLabel#calc_node_mul,
+QDMNodeContentWidget QLabel#calc_node_div {
+  padding-top: 12px;
+}
+QDMNodeContentWidget QLabel#calc_node_output {
+  min-width: 150px;
+  max-width: 150px;
+  min-height: 45px;
+  max-height: 45px;
+  margin-left: 10px;
+  margin-top: 5px;
+  font-size: 28px;
+}
+QDMNodeContentWidget QLineEdit {
+  height: 36px;
+  margin-top: 5px;
+  margin-left: 5px;
+  font-size: 20px;
+}
+QGraphicsView {
+  selection-background-color: #fff;
+}
