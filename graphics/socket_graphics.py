@@ -3,13 +3,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 SOCKET_COLORS = [
-    QColor("#FFFF7700"),
-    QColor("#FF52e220"),
-    QColor("#FF0056a6"),
-    QColor("#FFa86db1"),
-    QColor("#FFb54747"),
-    QColor("#FFdbe220"),
-    QColor("#FF888888"),
+    QColor("#209e5f"),
+    QColor("#209e5f"),
+    QColor("#209e5f"),
+    QColor("#209e5f"),
+    QColor("#209e5f"),#start
+    QColor("#209e5f"), #vert_input
+    QColor("#209e5f"),
 ]
 
 class QDMGraphicsSocket(QGraphicsItem):

@@ -30,8 +30,8 @@ class Analyzer():
 
     def dfsCycle(self, node):
         self.colors = {}
-        self.cycles = {}
-        self.cycles_edges = {}
+        self.cycles = OrderedDict()
+        self.cycles_edges = OrderedDict()
         self.parents = {}
         self.doDfsCycle(node)
 
@@ -72,7 +72,7 @@ class Analyzer():
     def getCycle(self, start, path, edgePath):
         cycle = [start]
         cycleEdge = []
-        idx = len(cycleEdge) - 1
+        idx = len(edgePath) - 1
         # print(f"start {start.content.edit.text()}, end {end.content.edit.text()}")
         # print(",".join([node.content.edit.text() for node in path]))
         for node in path[::-1]:
@@ -82,7 +82,7 @@ class Analyzer():
             if node == start:
                 break
 
-        assert(idx == -1)
+        # assert(idx == -1)
 
         cycle.reverse()
         cycleEdge.reverse()
@@ -106,7 +106,7 @@ class Analyzer():
                 elif self.colors[toNode.id] == 1:
                     cycle, cycleEdges = self.getCycle(toNode, pathCopy, edgePathCopy)
                     self.cycles.setdefault(toNode, list()).append(cycle)
-                    self.cycles_edges.setdefault(toNode, list()).append(cycle)
+                    self.cycles_edges.setdefault(toNode, list()).append(cycleEdges)
                 print(f"return to {node.content.edit.text()}", "path", ",".join([node.content.edit.text() for node in path]))
         self.colors[node.id] = 0
 
@@ -140,26 +140,49 @@ class Analyzer():
             brackets = brackets.replace('()', '')
         return not brackets
 
-    def proceedCycles(self, cycles, ):
+    def proceedCycles(self, cycles, edges_cycles):
         cycleCollectedStrings = (list(), list())
 
-        a = set()
+        for outer_idx in range(len(edges_cycles)):
+            node_cycle = cycles[outer_idx]
+            edge_cycle = edges_cycles[outer_idx]
 
-        for idx, cycle in enumerate(cycles):
-            # if len(cycle) == 2:
-            #     assert(cycle[0] == cycle[1])
-            #     node = cycle[0]
-            #     for edge in node.outputs[0].edges:
-            #         if node == edge.end_socket.node and edge not in a:
-            #             cycleCollectedStrings[0].append(edge.edge_bracket)
-            #             cycleCollectedStrings[1].append(edge.edge_label)
-            #             a.add(edge)
-            #     continue
+            inner_idx = 0
+            for edge in edge_cycle:
+                nodeFrom, nodeTo = edge.start_socket.node, edge.end_socket.node
+                assert(nodeFrom == node_cycle[inner_idx])
+                assert(nodeTo == node_cycle[inner_idx + 1])
+                nodeTo = edge.end_soocket.node
 
-            for edge in edgePath:
-                self.visited_nodes.add(edge.end_socket.node)
-                cycleCollectedStrings[0].append(currentEdge.edge_bracket)
-                cycleCollectedStrings[1].append(currentEdge.edge_label)
+                self.visited_nodes.add(nodeTo)
+                cycleCollectedStrings[0].append(edge.edge_bracket)
+                cycleCollectedStrings[1].append(edge.edge_label)
+
+                inner_idx += 1
+
+            #print("inner_idx", inner_idx, len(node_cycle))
+            assert(inner_idx == len(node_cycle) - 1)
+
+        # for idx, cycle in enumerate(cycles):
+        #     if len(cycle) == 2:
+        #         assert(cycle[0] == cycle[1])
+        #         node = cycle[0]
+        #         print(len(node.outputs[0].edges))
+
+                # for edge in node.outputs[0].edges:
+                #     if node == edge.end_socket.node and edge not in a:
+                #         cycleCollectedStrings[0].append(edge.edge_bracket)
+                #         cycleCollectedStrings[1].append(edge.edge_label)
+                #         print("adding an edge to set:", edge.edge_label)
+                #         a.add(edge)
+                #     else:
+                #         print("ebola")
+                # continue
+            # edgePath = edges_cycles
+            # for edge in edgePath:
+            #     self.visited_nodes.add(edge.end_socket.node)
+            #     cycleCollectedStrings[0].append(edge.edge_bracket)
+            #     cycleCollectedStrings[1].append(edge.edge_label)
 
             # for nodeFrom, nodeTo in zip(cycle[:-1], cycle[1:]):
             #     # print(f"from-to1 {nodeFrom.content.edit.text()}-{nodeTo.content.edit.text()}")
@@ -177,7 +200,7 @@ class Analyzer():
 
 
             # TODO: maybe bug
-            for remainingCycle in cycles[idx + 1:]:
+            for remainingCycle in cycles[outer_idx + 1:]:
                 for node in remainingCycle:
                     self.visited_nodes.discard(node)
 
@@ -202,20 +225,32 @@ class Analyzer():
                 #     print(f"Цикл от {node.content.edit.text()} содержит вершины: " + ' -> '.join(
                 #         [node.content.edit.text() for node in cycle]))
                 # print("subset: ", self.subset)
-
                 processableCycles = list()
+                processableEdges = list()
+
+                # processableIdxes = list()
+
+                # NB: keep this
                 for idx, cycle in self.cycleNumbersMap[node]:
                     if idx in self.subset:
+                        # processableIdxes.append(idx)
                         processableCycles.append(cycle)
+                        processableEdge = None
+                        for edgeIdx, edge in self.cycleEdgesNumbersMap[node]:
+                            if edgeIdx == idx:
+                                processableEdge = edge
+                        assert(processableEdge is not None)
+                        processableEdges.append(processableEdge)
 
-                for permutation in permutations(processableCycles, len(processableCycles)):
-                    # print("I'm in permutation cycle, wtf")
-                    # print(f"Processable cycles permutation {len(permutation)}:")
-                    # for cycle in permutation:
-                    #     print(f"Цикл из перестановки от {node.content.edit.text()} содержит вершины: " + ' -> '.join(
-                    #         [node.content.edit.text() for node in cycle]))
+                for permutation in permutations(range(len(processableCycles)), len(processableCycles)):
+                    cyclesPermutation = []
+                    edgeCyclesPermutation = []
+                    # print("cycles len ", len(self.cycles), len(self.cycles_edges))
+                    for idx in permutation:
+                        cyclesPermutation.append(processableCycles[idx])
+                        edgeCyclesPermutation.append(processableEdges[idx])
 
-                    cycleCollectedStrings = self.proceedCycles(permutation)
+                    cycleCollectedStrings = self.proceedCycles(cyclesPermutation, edgeCyclesPermutation)
                     self.collectedStrings = (
                         self.collectedStrings[0] + cycleCollectedStrings[0],
                         self.collectedStrings[1] + cycleCollectedStrings[1]
@@ -239,6 +274,60 @@ class Analyzer():
                         self.collectedStrings[0][: len(self.collectedStrings[0]) - len(cycleCollectedStrings[0])],
                         self.collectedStrings[1][: len(self.collectedStrings[1]) - len(cycleCollectedStrings[1])]
                     )
+
+                # for permutation in permutations(self.subset, len(self.subset)):
+                #     # print(permutation)
+                #     # print(f"cycle: {self.cycleNumbersMap[node]}, edges: {self.cycleEdgesNumbersMap[node]}")
+                #
+                #     for idx, cycle in self.cycleNumbersMap[node]:
+                #         # print(idx, "check in: ", idx in permutation)
+                #         if idx in permutation:
+                #             processableCycles.append(cycle)
+                #     # print(f"subset: {self.subset}")
+                #     for idx_edge, cycle_edge in self.cycleEdgesNumbersMap[node]:
+                #         if idx_edge in permutation:
+                #             processableEdges.append(cycle_edge)
+
+
+
+                # print("proc cycles: ------", processableCycles)
+                # print("proc edges: -------", processableEdges)
+                    # print("dghvvhjlhcgfxkjzfxcjgkcghvkcghkfxjg")
+                #     perm = permutations(self.subset, len(self.subset))
+                #     print(list(perm))
+
+                # for permutation in permutations(processableCycles, len(processableCycles)):
+                    # print("I'm in permutation cycle, wtf")
+                    # print(f"Processable cycles permutation {len(permutation)}:")
+                    # for cycle in permutation:
+
+                    #     print(f"Цикл из перестановки от {node.content.edit.text()} содержит вершины: " + ' -> '.join(
+                    #         [node.content.edit.text() for node in cycle]))
+                # commented lower
+                # cycleCollectedStrings = self.proceedCycles(processableCycles, processableEdges)
+                # self.collectedStrings = (
+                #     self.collectedStrings[0] + cycleCollectedStrings[0],
+                #     self.collectedStrings[1] + cycleCollectedStrings[1]
+                # )
+                # self.visited_nodes.add(node)
+                #
+                # # print("go to deep dfs cnt", cnt)
+                # for edge in node.outputs[0].edges:
+                #     toNode = edge.end_socket.node
+                #     # print(f" if from {node.content.edit.text()} try {toNode.content.edit.text()}")
+                #     # print("visted:", ", ".join([node.content.edit.text() for node in self.visited_nodes]))
+                #     self.collectedStrings[0].append(edge.edge_bracket)
+                #     self.collectedStrings[1].append(edge.edge_label)
+                #     if toNode not in self.visited_nodes:
+                #         self.dfsSubset(toNode)
+                #         # print(f"return to {node.content.edit.text()}")
+                #     for item in self.collectedStrings:
+                #         item.pop()
+                # # print("return from deep dfs cnt", cnt)
+                # self.collectedStrings = (
+                # self.collectedStrings[0][: len(self.collectedStrings[0]) - len(cycleCollectedStrings[0])],
+                # self.collectedStrings[1][: len(self.collectedStrings[1]) - len(cycleCollectedStrings[1])]
+                # )
             else:
                 for edge in node.outputs[0].edges:
                     toNode = edge.end_socket.node
@@ -250,7 +339,6 @@ class Analyzer():
                         self.dfsSubset(toNode)
                     for item in self.collectedStrings:
                         item.pop()
-
         self.visited_nodes.remove(node)
 
     def processSubset(self):
@@ -271,17 +359,25 @@ class Analyzer():
         self.cyclesNumber = 0
         self.subset = set()
         self.cycleNumbersMap = {}
+        self.cycleEdgesNumbersMap = {}
 
         cyclesNumber = 0
+        cyclesNumber_Edges = 0
         for node in self.cycles:
             self.cyclesNumber += len(self.cycles[node])
 
             self.cycleNumbersMap[node] = list()
+            self.cycleEdgesNumbersMap[node] = list()
             for idx, cycle in enumerate(self.cycles[node]):
                 self.cycleNumbersMap[node].append((cyclesNumber, cycle))
                 cyclesNumber += 1
+            for idx, edges_cycle in enumerate(self.cycles_edges[node]):
+                self.cycleEdgesNumbersMap[node].append((cyclesNumber_Edges, edges_cycle))
+                cyclesNumber_Edges += 1
 
         print("cycles number =", self.cyclesNumber)
+        print(self.cycleNumbersMap)
+        print(self.cycleEdgesNumbersMap)
 
         self.generateSubset(0)
 
@@ -299,43 +395,5 @@ class Analyzer():
         return fin_str[:-2]+'.'
         #self.buildCore()
 
-    def sentence(self, node, brackets_trace, labels_trace, wd = 0):
-        #print('shalava', self.core_visited_nodes)
-        self.core_visited_nodes.add(node)
-        assert(len(node.inputs) == 1 or len(node.inputs) == 0)
-        # print("node", str(node.content.edit.text()), "outputs", len(node.outputs))
-        if len(node.inputs) == 1:
-            for edge in node.inputs[0].edges:
-                toNode = edge.start_socket.node
-                #print(toNode)
-                brackets_trace += edge.edge_bracket
-                print(brackets_trace)
-                labels_trace += edge.edge_label
-                print(labels_trace)
-                if toNode not in self.core_visited_nodes:
-                    self.sentence(toNode, brackets_trace, labels_trace)
-
-    def sentencesCore(self, wd = 0):
-        self.core_visited_nodes = set()
-        self.end_nodes = set()
-        label_trace_core = []
-        bracket_trace_core = []
-        labels = brackets = ''
-        for node in self.nodes:
-            if isinstance(node, CalcNode_Input):
-                self.dfs(node)
-                for visited_node in self.visited_nodes:
-                    if isinstance(visited_node, CalcNode_Output):
-                        self.end_nodes.add(visited_node)
-                for visited_node in self.visited_nodes:
-                    if isinstance(visited_node, CalcNode_Output) and (visited_node in self.end_nodes):
-                        self.sentence(visited_node, brackets, labels)
-                        print('labels path:', labels[::-1])
-                        print('brackets path:', brackets[::-1])
-                        self.end_nodes.remove(visited_node)
-        return True, labels[::-1], brackets[::-1]
-
-    def DeterminedGraph(self):
-        pass
 
 

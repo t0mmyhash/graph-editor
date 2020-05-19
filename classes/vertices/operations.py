@@ -34,7 +34,7 @@ class CalcNode_Add(CalcNode):
     content_label_objname = "calc_node_bg"
 
     def __init__(self, scene):
-        super().__init__(scene, inputs=[2], outputs=[1])
+        super().__init__(scene, inputs=[], outputs=[1])
         self.eval()
 
     def initInnerClasses(self):
