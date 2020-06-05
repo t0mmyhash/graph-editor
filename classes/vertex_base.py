@@ -3,7 +3,7 @@ from classes.vertex import Node
 from classes.vertex_content import QDMNodeContentWidget
 from graphics.vertex_graphics import QDMGraphicsNode
 from classes.socket import LEFT_CENTER, RIGHT_CENTER
-
+# from classes.vertices.operations import CalcNode_Add_Right_In
 
 class CalcGraphicsNode(QDMGraphicsNode):
     def initSizes(self):
@@ -48,12 +48,17 @@ class CalcNode(Node):
         self.value = None
 
         # it's really important to mark all vertices Dirty by default
-        #self.markDirty()
+        self.markDirty()
 
     def initSettings(self):
         super().initSettings()
-        self.input_socket_position = LEFT_CENTER
-        self.output_socket_position = RIGHT_CENTER
+        if self.op_code == 4:
+            self.input_socket_position = RIGHT_CENTER
+            self.output_socket_position = LEFT_CENTER
+        else:
+            self.input_socket_position = LEFT_CENTER
+            self.output_socket_position = RIGHT_CENTER
+
 
     def evalOperation(self, input1, input2):
         return 123

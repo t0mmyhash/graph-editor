@@ -233,10 +233,10 @@ class GraphEditorWindow(NodeEditorWindow):
 
     def checkCorrect(self):
         calcWindow = self.getCurrentNodeEditorWidget()
-        anal = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
+        analyze_graph = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
         # print(anal.edges)
         # print(anal.vertices)
-        isOk, msg = anal.checkCorrectness()
+        isOk, msg = analyze_graph.checkCorrectness()
         # print(isOk, msg)
         if isOk:
             QMessageBox.about(self, "Правильность ввода", "Граф корректен.")
@@ -255,18 +255,22 @@ class GraphEditorWindow(NodeEditorWindow):
         # elif calcWindow.filename == "/Users/ouroboros/Desktop/df6.json":
         #     print("Core(0, 0) : labels :: -> _ -> b - > b - >, brackets :: empty")
         #     print("Core(1, 1) : labels :: -> _ -> a - > b -> a -> b - >, brackets :: -> _ -> ( -> _ -> ) -> _ ->.")
-        anal = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
-        anal.checkCycles()
-        anal.buildCore()
-        # isOk, coreLabels, coreBrackets = anal.sentencesCore()
+        analyze_graph = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
+        analyze_graph.checkCycles()
+        brackets, labels, msg = analyze_graph.buildCore()
+        if msg == '':
+            QMessageBox.warning(self, "Ядро L-графа", "Не получилось найти ядро.")
+        else:
+            QMessageBox.about(self, "Ядро L-графа", msg)
+        # isOk, coreLabels, coreBrackets = analyze_graph.sentencesCore()
         # print(isOk, coreLabels, coreBrackets)
 
     def checkCycles(self):
         calcWindow = self.getCurrentNodeEditorWidget()
-        anal = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
+        analyze_graph = Analyzer(calcWindow.scene.nodes, calcWindow.scene.edges)
         # print(anal.edges)
         # print(anal.vertices)
-        msg = anal.checkCycles()
+        msg = analyze_graph.checkCycles()
         if msg == '.':
             QMessageBox.warning(self, "Циклы в L-графе", "В графе нет циклов.")
         else:
@@ -287,6 +291,15 @@ class GraphEditorWindow(NodeEditorWindow):
             first_graph.checkCycles()
             print("-----Второй граф")
             second_graph.checkCycles()
+            brackets_first, labels_first, msg = first_graph.buildCore()
+            brackets_second, labels_second, msg = second_graph.buildCore()
+            set_first = set(labels_first)
+            set_second = set(labels_second)
+            if set_first == set_second:
+                QMessageBox.warning(self, "Равенство языков", "Языки L-графов равны.")
+            else:
+                QMessageBox.about(self, "Равенство языков", "Языки L-графов не равны.")
+
 
         #print(self.subwindow_counter)
 

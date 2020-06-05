@@ -460,7 +460,7 @@ class QDMGraphicsView(QGraphicsView):
                     if item.socket.is_input:
                         new_edge = Edge(self.grScene.scene, self.drag_start_socket, item.socket, edge_type=EDGE_TYPE_BEZIER)
                     else:
-                        print("хуй соси блядина в аутпут сувать дуги!!")
+                        print("wrong end socket")
                     if DEBUG: print("View::edgeDragEnd ~  created new edge:", new_edge, "connecting", new_edge.start_socket, "<-->", new_edge.end_socket)
 
                     ## Send notifications for the new edge

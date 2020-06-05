@@ -1,6 +1,6 @@
 
 
-# __all__ = [ "operations", "input", "output" ]
+# __all__ = [ "operations", "input_left", "input_right", "output" ]
 
 from os.path import dirname, basename, isfile, join
 import glob

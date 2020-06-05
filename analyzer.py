@@ -9,10 +9,14 @@ CORE_D = 0
 
 class Analyzer():
     visited_nodes = set()
+    core_labels = list()
+    core_brackets = list()
 
     def __init__(self, nodes, edges):
         self.nodes = nodes
         self.edges = edges
+        self.count = 0
+
 
     def dfs(self, node):
         self.visited_nodes.clear()
@@ -89,12 +93,12 @@ class Analyzer():
         return cycle, cycleEdge
 
     def doDfsCycle(self, node, path=list(), edgePath=list()):
-        print("goto", node.content.edit.text(), "path", ",".join([node.content.edit.text() for node in path]))
+        # print("goto", node.content.edit.text(), "path", ",".join([node.content.edit.text() for node in path]))
         assert (len(node.outputs) == 1 or len(node.outputs) == 0)
         self.colors[node.id] = 1
         pathCopy = path.copy()
         pathCopy.append(node)
-        print("pathCopy", ",".join([node.content.edit.text() for node in pathCopy]))
+        # print("pathCopy", ",".join([node.content.edit.text() for node in pathCopy]))
         if len(node.outputs) == 1:
             for edge in node.outputs[0].edges:
                 toNode = edge.end_socket.node
@@ -107,7 +111,7 @@ class Analyzer():
                     cycle, cycleEdges = self.getCycle(toNode, pathCopy, edgePathCopy)
                     self.cycles.setdefault(toNode, list()).append(cycle)
                     self.cycles_edges.setdefault(toNode, list()).append(cycleEdges)
-                print(f"return to {node.content.edit.text()}", "path", ",".join([node.content.edit.text() for node in path]))
+                # print(f"return to {node.content.edit.text()}", "path", ",".join([node.content.edit.text() for node in path]))
         self.colors[node.id] = 0
 
 
@@ -152,7 +156,7 @@ class Analyzer():
                 nodeFrom, nodeTo = edge.start_socket.node, edge.end_socket.node
                 assert(nodeFrom == node_cycle[inner_idx])
                 assert(nodeTo == node_cycle[inner_idx + 1])
-                nodeTo = edge.end_soocket.node
+#                nodeTo = edge.end_soocket.node
 
                 self.visited_nodes.add(nodeTo)
                 cycleCollectedStrings[0].append(edge.edge_bracket)
@@ -210,6 +214,22 @@ class Analyzer():
 
         return cycleCollectedStrings
 
+    def checkOutputCorrectness(self, strings):
+        brackets = strings[0]
+        str_brackets = ''.join(brackets)
+        while '()' in str_brackets:
+            str_brackets = str_brackets.replace('()', '')
+        #print(strings[1])
+        str_lab = '  ->  '.join([(jo if jo != '' else '_') for jo in self.collectedStrings[1]])
+        str_bra = '  ->  '.join([(jo if jo != '' else '_') for jo in self.collectedStrings[0]])
+        if str_brackets == '':
+            self.core_labels.append(str_lab)
+            # self.core_labels.append([strings[1]])
+            # print(self.core_labels)
+            self.core_brackets.append(str_bra)
+            self.count +=1
+            # print(self.core_brackets)
+
 
     def dfsSubset(self, node):
         # print(f"goto {node.content.edit.text()}")
@@ -217,7 +237,9 @@ class Analyzer():
         assert (len(node.outputs) == 1 or len(node.outputs) == 0)
         # print("node", str(node.content.edit.text()), "outputs", len(node.outputs))
         if len(node.outputs) == 0:  # output node
-            print("Got this:", self.collectedStrings)
+            #print("Got this:", self.collectedStrings)
+            self.checkOutputCorrectness(self.collectedStrings)
+            # self.core_labels.append()
         else:
             if node in self.cycles:
                 # print(self.cycleNumbersMap)
@@ -376,10 +398,19 @@ class Analyzer():
                 cyclesNumber_Edges += 1
 
         print("cycles number =", self.cyclesNumber)
-        print(self.cycleNumbersMap)
-        print(self.cycleEdgesNumbersMap)
+        #print(self.cycleNumbersMap)
+        #print(self.cycleEdgesNumbersMap)
 
         self.generateSubset(0)
+        #print(f'Labels: {self.core_labels}')
+        #print(f'Brackets: {self.core_brackets}')
+        msg = ''
+        #print(self.count)
+        for idx in range(self.count):
+            msg += (f'Пометки:   {self.core_labels[idx]} \nСкобки   :   {self.core_brackets[idx]}')
+            msg += '\n\n'
+
+        return self.core_labels, self.core_brackets, msg[:-1]
 
     def checkCycles(self, node = 0, wd = 0):
         fin_str = ''
@@ -389,7 +420,7 @@ class Analyzer():
         self.dfsCycle(self.start_node)
         for node in self.cycles:
             for cycle in self.cycles[node]:
-                str = f"Цикл от {node.content.edit.text()} содержит вершины: " + ' -> '.join([node.content.edit.text() for node in cycle])
+                str = f"Цикл от {node.content.edit.text()} содержит дуги: " + ' -> '.join([node.content.edit.text() for node in cycle])
                 print(str)
                 fin_str += str + ';\n'
         return fin_str[:-2]+'.'

@@ -5,7 +5,8 @@ from PyQt5.QtGui import *
 
 
 EDGE_CP_ROUNDNESS = 100     #: Bezier controll point distance on the line
-arrowSize = 13
+arrowSize_x = 10
+arrowSize_y = 4
 Pi = 3.14
 ishAngle = Pi/6
 
@@ -38,6 +39,8 @@ class QDMGraphicsEdge(QGraphicsPathItem):
 
         self.text_pos_x = 0
         self.text_pos_y = 0
+        self.last_bezier_x = 0
+        self.last_bezier_y = 0
 
 
         self.initAssets()
@@ -113,52 +116,43 @@ class QDMGraphicsEdge(QGraphicsPathItem):
         self.update()
 
     def setSource(self, x:float, y:float):
-        """ Set source point
-
-        :param x: x position
-        :type x: ``float``
-        :param y: y position
-        :type y: ``float``
-        """
         self.posSource = [x, y]
 
     def setDestination(self, x:float, y:float):
-        """ Set destination point
-
-        :param x: x position
-        :type x: ``float``
-        :param y: y position
-        :type y: ``float``
-        """
         self.posDestination = [x, y]
 
     def boundingRect(self) -> QRectF:
-        """Defining Qt' bounding rectangle"""
+
         return self.shape().boundingRect()
 
     def shape(self) -> QPainterPath:
-        """Returns ``QPainterPath`` representation of this `Edge`
-
-        :return: path representation
-        :rtype: ``QPainterPath``
-        """
         return self.calcPath()
 
     def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
-        """Qt's overriden method to paint this Graphics Edge. Path calculated in :func:`~nodeeditor.node_graphics_edge.QDMGraphicsEdge.calcPath` method"""
         self.setPath(self.calcPath())
 
         painter.setBrush(Qt.NoBrush)
-        angle = (Pi * 2)  # - ishAngle TODO : angles
+        s = (self.last_bezier_x, self.last_bezier_y)
+        d = self.posDestination
+        dX = d[0] - s[0]
+        dY = d[1] - s[1]
 
-        arrowP1 = QPointF(
-            QPointF(self.posDestination[0], self.posDestination[1]) - QPointF(math.sin(angle + Pi / 3) * arrowSize,
-                                                                              math.cos(angle + Pi / 3) * arrowSize) * (
-                                                                              -1 if self.posDestination[0] <= self.posSource[0] else 1))
-        arrowP2 = QPointF(
-            QPointF(self.posDestination[0], self.posDestination[1]) - QPointF(math.sin(angle + Pi - Pi / 3) * arrowSize,
-                                                                              math.cos(angle + Pi - Pi / 3) * arrowSize) * (
-                                                                              -1 if self.posDestination[0] <= self.posSource[0] else 1))
+        Len = math.sqrt(dX * dX + dY * dY)
+        udX = dX / Len if Len > 0 else 1
+        udY = dY / Len if Len > 0 else 1
+
+        perpX = -udY
+        perpY = udX
+
+
+        leftX = d[0] - arrowSize_x * udX + arrowSize_y * perpX
+        leftY = d[1] - arrowSize_x * udY + arrowSize_y * perpY
+
+        rightX = d[0] - arrowSize_x * udX - arrowSize_y * perpX
+        rightY = d[1] - arrowSize_x * udY - arrowSize_y * perpY
+
+        arrowP1 = QPointF(leftX, leftY)
+        arrowP2 = QPointF(rightX, rightY)
         # painter.setBrush(self._arrowBrush)
         if self.hovered and self.edge.end_socket is not None:
             painter.setPen(self._pen_hovered)
@@ -325,7 +319,8 @@ class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
                     #print(s[1], '.....', self.text_pos_y, '.......', d[1])
 
         path = QPainterPath(QPointF(self.posSource[0], self.posSource[1]))
-
+        self.last_bezier_x = d[0] + cpx_d
+        self.last_bezier_y = d[1] + cpy_d
         path.cubicTo( s[0] + cpx_s, s[1] + cpy_s, d[0] + cpx_d, d[1] + cpy_d, self.posDestination[0], self.posDestination[1])
 
         return path

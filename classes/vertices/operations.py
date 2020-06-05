@@ -27,14 +27,14 @@ class NodeStandContent(QDMNodeContentWidget):
 
 @register_node(OP_NODE_ADD)
 class CalcNode_Add(CalcNode):
-    icon = "icons/add.png"
+    icon = "icons/left.png"
     op_code = OP_NODE_ADD
-    op_title = "Вершина"
-    content_label = "+"
+    op_title = "Вершина (left in)"
+    content_label = "A"
     content_label_objname = "calc_node_bg"
 
     def __init__(self, scene):
-        super().__init__(scene, inputs=[], outputs=[1])
+        super().__init__(scene, inputs=[2], outputs=[1])
         self.eval()
 
     def initInnerClasses(self):
@@ -42,11 +42,26 @@ class CalcNode_Add(CalcNode):
         self.grNode = CalcGraphicsNode(self)
         #self.content.edit.textChanged.connect(self.onInputChanged)
 
-
-
     def evalOperation(self, input1, input2):
         return input1 + input2
 
 
-# way how to register by function call
-# register_node_now(OP_NODE_ADD, CalcNode_Add)
+@register_node(OP_NODE_ADD_RIGHT_IN)
+class CalcNode_Add_Right_In(CalcNode):
+    icon = "icons/right.png"
+    op_code = OP_NODE_ADD_RIGHT_IN
+    op_title = "Вершина (right in)"
+    content_label = "C"
+    content_label_objname = "calc_node_right_input"
+
+    def __init__(self, scene):
+        super().__init__(scene, inputs=[2], outputs=[1])
+        self.eval()
+
+    def initInnerClasses(self):
+        self.content = NodeStandContent(self)
+        self.grNode = CalcGraphicsNode(self)
+        #self.content.edit.textChanged.connect(self.onInputChanged)
+
+    def evalOperation(self, input1, input2):
+        return input1 + input2

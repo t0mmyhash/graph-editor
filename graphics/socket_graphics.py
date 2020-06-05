@@ -3,22 +3,18 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 SOCKET_COLORS = [
+    QColor("#dc143c"), #end input
+    QColor("#ffa000"), #vertex output
+    QColor("#a55ac4"), #vert_input
     QColor("#209e5f"),
-    QColor("#209e5f"),
-    QColor("#209e5f"),
-    QColor("#209e5f"),
-    QColor("#209e5f"),#start
-    QColor("#209e5f"), #vert_input
+    QColor("#209e5f"), #start
+    QColor("#fff666"),
     QColor("#209e5f"),
 ]
 
 class QDMGraphicsSocket(QGraphicsItem):
     """Class representing Graphic `Socket` in ``QGraphicsScene``"""
     def __init__(self, socket:'Socket'):
-        """
-        :param socket: reference to :class:`~nodeeditor.node_socket.Socket`
-        :type socket: :class:`~nodeeditor.node_socket.Socket`
-        """
         super().__init__(socket.node.grNode)
 
         self.socket = socket
